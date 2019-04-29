@@ -1,5 +1,4 @@
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -7,10 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UserDao {
-
-    private String url = "jdbc:postgresql://localhost:5432/hw14";
-    private String user = "postgres";
-    private String password = "root";
+    private static String url = "jdbc:postgresql://localhost:5432/hw14";
+    private static String user = "postgres";
+    private static String password = "root";
 
     private static final String INSERT_USER_SQL = "INSERT INTO users (login, password) VALUES (?, ?);";
     private static final String SELECT_USER_BY_LOGIN = "SELECT * FROM USERS WHERE  login = ?;";
@@ -21,20 +19,8 @@ public class UserDao {
     public UserDao() {
     }
 
-    public Connection connect() {
-        Connection connection = null;
-        try {
-            connection = DriverManager.getConnection(url, user, password);
-            System.out.println("Connection to the PostgreSQL server successfully");
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return connection;
-    }
-
     public void insertUser(User user) {
-        try (Connection connection = connect(); PreparedStatement preparedStatement = connection.prepareStatement(INSERT_USER_SQL)) {
+        try (Connection connection = DBConnection.connect(); PreparedStatement preparedStatement = connection.prepareStatement(INSERT_USER_SQL)) {
             preparedStatement.setString(1, user.getLogin());
             preparedStatement.setString(2, user.getPassword());
             System.out.println(preparedStatement);
@@ -46,7 +32,7 @@ public class UserDao {
 
     public User selectUser(String login) {
         User user = null;
-        try (Connection connection = connect();
+        try (Connection connection = DBConnection.connect();
              PreparedStatement preparedStatement = connection.prepareStatement(SELECT_USER_BY_LOGIN)) {
             preparedStatement.setString(1, login);
             System.out.println(preparedStatement);
@@ -64,7 +50,7 @@ public class UserDao {
 
     public List<User> selectAllUser() {
         List<User> users = new ArrayList<>();
-        try (Connection connection = connect();
+        try (Connection connection = DBConnection.connect();
              PreparedStatement preparedStatement = connection.prepareStatement(SELECT_ALL_USERS)) {
             System.out.println(preparedStatement);
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -81,7 +67,7 @@ public class UserDao {
 
     public boolean deleteUser(String login) throws SQLException {
         boolean rowDeleted = false;
-        try (Connection connection = connect();
+        try (Connection connection = DBConnection.connect();
              PreparedStatement preparedStatement = connection.prepareStatement(DELETE_USERS_SQL)) {
             preparedStatement.setString(1, login);
             System.out.println(preparedStatement);
@@ -94,7 +80,7 @@ public class UserDao {
 
     public boolean updateUser(User user, String login) {
         boolean rowUpdated = false;
-        try (Connection connection = connect();
+        try (Connection connection = DBConnection.connect();
              PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_USERS_SQL)) {
             preparedStatement.setString(1, user.getLogin());
             preparedStatement.setString(2, user.getPassword());
@@ -108,7 +94,6 @@ public class UserDao {
     }
 
     public boolean isExists(String login) {
-        boolean isExists = false;
         User user = selectUser(login);
         if (user != null) {
             return true;
